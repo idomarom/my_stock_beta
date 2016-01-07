@@ -1,0 +1,828 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Welcome to MyStock</title>
+
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+  <link rel="stylesheet" type="text/css" href="animations.css" >
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+
+  <!--<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.js"></script>-->
+  <!--<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.0-rc.0/angular.min.js"></script>-->
+  <!--<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.0-rc.0/angular-animate.js"></script>-->
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+
+  <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular.js"></script>
+  <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular-animate.js"></script>
+  <script type="text/javascript" src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.3.js"></script>
+  <!--<link  rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">-->
+
+  <!--<script type="text/javascript" src="scripts/dropdown.js"></script>-->
+</head>
+
+<style>
+  body { padding-top:50px;
+         padding-left:50px;
+         padding-right:50px;
+         padding-bottom:50px;
+  }
+  .sortorder:after {
+    content: '\25b2';
+  }
+  .sortorderReverse:after {
+    content: '\25bc';
+  }
+
+  .profit {
+    color: green;
+  }
+  .loss {
+    color: red;
+  }
+
+  .scroller {
+    height: 100px;
+    /*border: 1px solid black;*/
+    overflow-y: scroll;
+  }
+
+  .largeCheckBox {
+    width: 25px;
+    height: 25px;
+  }
+</style>
+
+<style>
+  .typeahead-demo .custom-popup-wrapper {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    display: none;
+    background-color: #f9f9f9;
+  }
+
+  .typeahead-demo .custom-popup-wrapper > .message {
+    padding: 10px 20px;
+    border-bottom: 1px solid #ddd;
+    color: #868686;
+  }
+
+  .typeahead-demo .custom-popup-wrapper > .dropdown-menu {
+    position: static;
+    float: none;
+    display: block;
+    min-width: 160px;
+    background-color: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+</style>
+
+<body class="body">
+
+<div id="myapp" ng-app="myStock">
+  <div ng-controller="stockCtrl">
+
+
+    <form class="form-horizontal">
+        <div class="form-group">
+          <!--<div class="col-xs-4">-->
+          <div class="form-group col-xs-6">
+            <h5><span class="label label-default">User Nickname:</span></h5>
+            <!--<label class="col-xs-2">User Nickname:</label>-->
+            <input type="text" class="form-control" ng-model="user.userNickName" placeholder="User Nick Name"/>
+          </div>
+
+          <div class="form-group col-xs-6">
+            <h5><span class="label label-default">Password:</span></h5>
+            <!--<label class="col-xs-2">Password:</label>-->
+            <input type="text" class="form-control" ng-model="user.password" placeholder="Password"/>
+          </div>
+        </div>
+    </form>
+
+    <form class="form-horizontal">
+      <div class="form-group">
+        <input type="submit" ng-click=login() value="Login" class="btn btn-lg btn-primary col-xs-6">
+      </div>
+    </form>
+
+    <hr>
+    <fieldset  ng-disabled="userId == null">
+      <form class="form-horizontal">
+        <div class="form-group">
+          <div class="form-group col-xs-12">
+            <h5><span class="label label-default">Stock Symbol:</span></h5>
+            <input type="text" ng-model="newStock.symbol" placeholder="Stock Symbol" uib-typeahead="symbol for symbol in completeSymbol($viewValue,10)" typeahead-min-length="2" typeahead-loading="loadingLocations" typeahead-no-results="noResults" class="form-control">
+            <i ng-show="loadingLocations" class="glyphicon glyphicon-refresh"></i>
+            <div ng-show="noResults">
+              <i class="glyphicon glyphicon-remove"></i> No Results Found
+            </div>
+          </div>
+
+          <div class="form-group col-xs-6">
+            <h5><span class="label label-default">Buying Date:</span></h5>
+            <!--<label class="col-xs-2">Buying Date:</label>-->
+            <input type="date" class="form-control" ng-model="newStock.date"/><br/>
+          </div>
+
+
+          <div class="form-group col-xs-3">
+            <!--<label class="col-xs-2">Buy Price:</label>-->
+            <h5><span class="label label-default">Price:</span></h5>
+            <input type="number" class="form-control" ng-model="newStock.buyPrice" placeholder="Price ($)"/><br/>
+          </div>
+
+          <div class="form-group col-xs-3">
+            <!--<label class="col-xs-2">Stock Amount:</label>-->
+            <h5><span class="label label-default">Amount:</span></h5>
+            <input type="number" class="form-control" ng-model="newStock.amount" placeholder="Amount"/><br/>
+          </div>
+        </div>
+      </form>
+
+
+
+      <!--uncomment for debug-->
+      <!--<div class="alert alert-info">-->
+      <!--<p>sortTypeStock: {{ sortTypeStock }}</p>-->
+      <!--<p>sortReverseStock: {{ sortReverseStock }}</p>-->
+      <!--<p>sortTypeStockPast: {{ sortTypeStockPast }}</p>-->
+      <!--<p>sortReverseStockPast: {{ sortReverseStockPast }}</p>-->
+      <!--</div>-->
+
+      <form class="form-horizontal">
+        <div class="form-group">
+          <input type="submit" ng-click=addStock() value="Add Stock" class="btn btn-lg btn-primary col-xs-6">
+        </div>
+      </form>
+      <hr>
+      <form class="form-horizontal">
+        <div class="form-group">
+          <input type="submit" ng-click=removeStock() value="Remove Checked Stocks" class="btn btn-lg btn-primary col-xs-6">
+        </div>
+      </form>
+
+      <h3><span class="label label-default">Stocks Bought:</span></h3>
+      <table class="table table-bordered table-striped">
+        <thead>
+        <tr>
+          <td>
+            <label>Select All</label>
+            <input type="checkbox" ng-model="selectAllCheckBox" ng-change="selectAll(false,selectAllCheckBox)" value=false  class="largeCheckBox" />
+          </td>
+          <td ng-repeat="(key,name) in showColumnsStock">
+            <!--<h4><span class="label label-default">{{name}}</span></h4>-->
+            <a href="" ng-click=sortStock(key)>
+              <strong>{{name}}</strong>
+              <span class="sortorder" ng-show="sortTypeStock==key && sortReverseStock"></span>
+              <span class="sortorderReverse" ng-show="sortTypeStock==key && !sortReverseStock"></span>
+            </a>
+          </td>
+        </tr>
+        </thead>
+
+
+
+        <tbody>
+        <tr ng-repeat="stock in stocks track by $index">
+          <td><input type="checkbox" ng-model="stock.check" value=false  class="largeCheckBox" /></td>
+          <td><strong>{{stock.symbol.split(":",1)[0]}}</strong>:{{stock.symbol.split(":",2)[1]}}</td>
+          <td>{{ stock.date.toLocaleDateString()}}</td>
+          <td>{{ stock.amount }}</td>
+          <td>{{ stock.buyPrice }}</td>
+          <td>{{ stock.amount * stock.buyPrice }}</td>
+          <td>{{stock.quote.LastTradePriceOnly}}</td>
+          <td>{{stock.quote.LastTradeDate}}</td>
+          <td>{{stock.quote.LastTradeTime}}</td>
+          <td>{{stock.quote.DaysRange}}</td>
+          <td ng-class="{'profit':stock.quote.PercentChange.includes('+'),'loss':stock.quote.PercentChange.includes('-')}">{{stock.quote.PercentChange}}</td>
+          <td ng-class="{'profit':stock.quote.Change.includes('+'),'loss':stock.quote.Change.includes('-')}">{{stock.quote.Change}}</td>
+          <td>{{stock.quote.Ask}}</td>
+          <td>{{stock.quote.Bid}}</td>
+          <!-- Profit percent:-->
+          <td ng-class="{'profit':stock.quote.LastTradePriceOnly/stock.buyPrice > 1,'loss':stock.quote.LastTradePriceOnly/stock.buyPrice < 1}">{{stock.quote.LastTradePriceOnly ? (stock.quote.LastTradePriceOnly/stock.buyPrice - 1) : null | percentage:2}}</td>
+          <!-- Total Profit:-->
+          <td ng-class="{'profit':stock.quote.LastTradePriceOnly-stock.buyPrice>0,'loss':stock.quote.LastTradePriceOnly-stock.buyPrice<0}">{{stock.quote.LastTradePriceOnly ? ((stock.quote.LastTradePriceOnly - stock.buyPrice) * stock.amount) : null | number:2 | plustMinus}}</td>
+          <td><input type="submit" ng-click=sellStock(stock) value="Sell Stock" class="btn btn-md btn-primary"/> <input type="number" ng-model="stock.sellPriceUpdate" placeholder="Stock Sell Price"/></td>
+        </tr>
+        </tbody>
+      </table>
+
+      <h3><span class="label label-default">Stocks Sold:</span></h3>
+      <table class="table table-bordered table-striped">
+        <thead>
+        <tr>
+          <td>
+            <label>Select All</label>
+            <input type="checkbox" ng-model="selectAllCheckBoxPast" ng-change="selectAll(true, selectAllCheckBoxPast)" value=false  class="largeCheckBox" />
+          </td>
+          <td ng-repeat="(key,name) in showColumnsStockPast">
+            <a href="" ng-click=sortStockPast(key)>
+              <strong>{{name}}</strong>
+              <span class="sortorder" ng-show="sortTypeStockPast==key && sortReverseStockPast"></span>
+              <span class="sortorderReverse" ng-show="sortTypeStockPast==key && !sortReverseStockPast"></span>
+            </a>
+          </td>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr ng-repeat="stock in stocksPast track by $index">
+          <td><input type="checkbox" ng-model="stock.check" value=false class="largeCheckBox" /></td>
+          <td><strong>{{stock.symbol.split(":",1)[0]}}</strong>:{{stock.symbol.split(":",2)[1]}}</td>
+          <td>{{ stock.date.toLocaleDateString()}}</td>
+          <td>{{ stock.amount }}</td>
+          <td>{{ stock.buyPrice }}</td>
+          <td>{{ stock.amount * stock.buyPrice }}</td>
+          <td style="background-color: lightblue">{{ stock.sellPrice }}</td>
+          <!-- Profit percent:-->
+          <td ng-class="{'profit':stock.sellPrice/stock.buyPrice > 1,'loss':stock.sellPrice/stock.buyPrice < 1}">{{stock.sellPrice/stock.buyPrice - 1 | percentage:2}}</td>
+          <!-- Total Profit:-->
+          <td ng-class="{'profit':stock.sellPrice-stock.buyPrice>0,'loss':stock.sellPrice-stock.buyPrice<0}">{{(stock.sellPrice - stock.buyPrice) * stock.amount | number:2 | plustMinus}}</td>
+          <td><input type="submit" ng-click=sellStock(stock) value="Update Sell Price" class="btn btn-md btn-primary"> <input type="number" ng-model="stock.sellPriceUpdate" placeholder="Stock Sell Price"/></td>
+        </tr>
+        </tbody>
+
+      </table>
+
+      <h3><span class="label label-default">Live Charts:</span></h3>
+    </fieldset>
+
+  </div><!--controller div-->
+
+</div><!--app div-->
+
+
+<div id='chartWidget' style="height: 600px;">
+  <!-- TradingView Widget BEGIN -->
+  <script type="text/javascript" src="https://d33t3vvu2t2yu5.cloudfront.net/tv.js"></script>
+  <script type="text/javascript">
+    var chart = new TradingView.widget({
+//      "width": 1200,
+//      "height": 610,
+      "autosize": true,
+      "watchlist": [],
+      "symbol": "FX:SPX500",
+      "interval": "60",
+      "timezone": "Europe/Athens",
+      "theme": "White",
+      "style": "2",
+      "locale": "en",
+      "toolbar_bg": "rgba(241, 243, 246, 1)",
+      "allow_symbol_change": true,
+      "save_image": false,
+      "hideideas": true
+    });
+  </script>
+  <!-- TradingView Widget END -->
+</div>
+
+</body>
+</html>
+
+
+<script>
+
+    var app = angular.module('myStock', ['ngAnimate', 'ui.bootstrap']);
+
+    app.controller ("stockCtrl",["$scope","$http","$filter", function ($scope, $http, $filter) {
+
+      // async get the symbols for auto completion
+      $scope.completeSymbol = function(symbol,size) {
+        return $http.get('https://widgetdata.tradingview.com/search/?text=' + symbol + '&exchange=&type=')
+                .then(function(response){
+                  return response.data.slice(0,size).map (function(item){ //slicing the number of result shown
+//                    return "\"" + item.symbol + "\", " + item.exchange + ", " + item.description + ", " + item.type;
+                    return "" + item.symbol + ": " + item.exchange + ", " + item.description + ", " + item.type;
+                  });
+                });
+      };
+
+      $scope.login = function() {
+        var address = $scope.serverRequest.login;
+        var req = {
+          method: 'POST',
+          url: address,
+          headers: {
+            'Content-Type': "application/x-www-form-urlencoded"
+          },
+          //should be "key=value" goes to body in request
+          data: "nick_name=" + $scope.user.userNickName + "&" + "password=" + $scope.user.password
+        };
+
+        $http(req).then( function successCallback(response) {
+          if (response.data.length) {
+            var result = response.data[0];
+            $scope.userId = result.id;
+            $scope.getStock();
+          } else {
+            $scope.cleanAll();
+          }
+        }, function errorCallback(response) {
+          console.log(address+ " error: " + response);
+          $scope.cleanAll();
+        });
+      };
+
+      $scope.cleanAll = function () {
+        $scope.restartSelectAll();
+        $scope.stocks=[];
+        $scope.stocksPast=[];
+        $scope.reloadChartWidget([]);
+      };
+
+      $scope.getQuote = function () {
+        console.log("getQuote");
+        var len = $scope.stocksNoQuote.length;
+        if(len < 1) {
+          $scope.stocks= [];
+          console.log("getQuote: no stocks to get quote for");
+          return;
+        }
+
+        //select * from yahoo.finance.quotes where symbol="GOOG" or symbol="YHOO"
+        var startAddress = 'https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.quotes%20where%20';
+//                        symbol%3D%22GOOG%22%20or%20symbol%3D%22YHOO%22
+        var endAddress= '&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=';
+
+        var symbol='';
+        var symbolsPartAddress='';
+        for(var i=0;i<len;++i){
+          symbol = $scope.stocksNoQuote[i].symbol.split(":",1)[0];
+          if(i>0)
+            symbolsPartAddress += 'or%20';
+          symbolsPartAddress += 'symbol%3D%22' + symbol + '%22%20'; // symbol="{symbol}"
+        }
+
+          var address = startAddress +symbolsPartAddress + endAddress;
+
+          $http.get(address).then(
+                  function successCallback(response) {
+                    var quoteArr = [].concat(response.data.query.results.quote);
+                    var len = quoteArr.length;
+                    for (var i =0; i < len; ++i) {
+                      $scope.stocksNoQuote[i].quote.LastTradePriceOnly = quoteArr[i].LastTradePriceOnly;
+                      $scope.stocksNoQuote[i].quote.LastTradeDate = quoteArr[i].LastTradeDate;
+                      $scope.stocksNoQuote[i].quote.LastTradeTime = quoteArr[i].LastTradeTime;
+                      $scope.stocksNoQuote[i].quote.DaysRange = quoteArr[i].DaysRange;
+                      $scope.stocksNoQuote[i].quote.PercentChange = quoteArr[i].PercentChange;
+                      $scope.stocksNoQuote[i].quote.Change = quoteArr[i].Change;
+                      $scope.stocksNoQuote[i].quote.Ask = quoteArr[i].Ask;
+                      $scope.stocksNoQuote[i].quote.Bid = quoteArr[i].Bid;
+                    }
+                    $scope.stocks=$scope.stocksNoQuote;
+                  }, function errorCallback(response) {
+                    console.log(address+ " error: " + response);
+                  }
+          );
+
+        setTimeout($scope.getQuote,60000); //start fetching quote each minute
+      };
+
+      $scope.getStock = function() {
+        $scope.restartSelectAll();
+
+        var address = $scope.serverRequest.stockGet;
+        var req = {
+          method: 'POST',
+          url: address,
+          headers: {
+            'Content-Type': "application/x-www-form-urlencoded"
+          },
+          data: "user_id=" + $scope.userId //should be "key=value" goes to body in request
+        };
+
+        $http(req).then(
+            function successCallback(response) {
+              var stockSymbolWatchlist= [];
+              var stocks= [];
+              var stocksPast= [];
+              console.log(address + " success: " +response);
+              var stock=$scope.emptyStock;
+              var dataTemp={};
+              var len = response.data.length;
+              for(var i=0; i < len; ++i) {
+                dataTemp = response.data[i];
+                stock.symbol = dataTemp["symbol"];
+                stock.date = new Date(dataTemp["date"]);
+                stock.date.setUTCHours(0, 0, 0, 0);
+                console.log("getStock: dataTemp[\"date\"]: " + dataTemp["date"]);
+                console.log("getStock: stock.date: " + stock.date);
+                stock.buyPrice = dataTemp["buy_price"];
+                stock.amount = dataTemp["amount"];
+                stock.sellPrice = dataTemp["sell_price"];
+                if (stock.sellPrice == $scope.emptySellPrice) {
+                  stock.sellPrice = null;
+                  stocks.push(jQuery.extend(true, {}, stock));
+                  var shortSymbol = stock.symbol.split(":",1)[0];
+                  stockSymbolWatchlist.push(shortSymbol);
+                } else {
+                  stocksPast.push(jQuery.extend(true, {}, stock));
+                }
+              }
+              $scope.reloadChartWidget(stockSymbolWatchlist);
+
+              $scope.stocksNoQuote=stocks;
+              $scope.stocksPast=stocksPast;
+
+              $scope.getQuote ();
+
+            }, function errorCallback(response) {
+              console.log(address+ " error: " + response);
+            }
+        );
+      };
+
+      $scope.prepareStockToRequest = function (stock) {
+        var date = stock.date;
+        var result = "user_id=" + $scope.userId + "&"
+                + "symbol=" + stock.symbol + "&"
+                + "date=" + date + "&"
+                + "buyPrice=" + stock.buyPrice + "&"
+                + "amount=" + stock.amount + "&"
+                + "sellPrice=" + ((stock.sellPrice == null) ? $scope.emptySellPrice : stock.sellPrice);
+        console.log ("prepareStockToRequest: " + date);
+        console.log ("prepareStockToRequest: " + result);
+        return result;
+      };
+
+      $scope.escapeRegExp = function(string){
+        return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      }
+
+      $scope.addStock = function() {
+        if ($scope.newStock.symbol == null || $scope.newStock.date == null || $scope.newStock.amount == null || $scope.newStock.buyPrice == null ) {
+          console.log("addStock: empty parameters");
+          window.alert("Empty parameters");
+          return false;
+        }
+
+        //normalizing symbol
+        $scope.newStock.symbol = $scope.newStock.symbol.replace(/[&.*+?^${}()|[\]\\]/g, "");
+
+        //we need only day resolution
+        $scope.newStock.date.setUTCHours(0,0,0,0);
+
+       //for fast response adding it first locally:
+        var len = $scope.stocks.length;
+        var inserted =false;
+        for (var i=0; i<len;++i) {
+          // pkey for stocks is:  CONSTRAINT pkey PRIMARY KEY (symbol, date, buy_price, sell_price, user_id),,. after login the user id is same for all stocks
+          // so needs to check only for date and symbol buy_price. no sell price at this point
+          if ( $scope.stocks[i].symbol == $scope.newStock.symbol &&
+                  $scope.stocks[i].buyPrice == $scope.newStock.buyPrice &&
+                  $scope.newStock.date.toUTCString() == $scope.stocks[i].date.toUTCString()) {
+            console.log("addStock: symbol, date, and buy price already exist: " + $scope.stocks[i].symbol);
+            window.alert("addStock: symbol, date, and buy price already exist");
+            return; // not adding twice
+          }
+
+          //stocks is sorted by symbol name, so we will add it in the right location:
+          if ($scope.newStock.symbol.localeCompare($scope.stocks[i].symbol) < 0
+                  || ($scope.newStock.symbol.localeCompare($scope.stocks[i].symbol) == 0 && $scope.newStock.buy_price < $scope.stocks[i].buy_price)
+//                $scope.newStock.date.getUTCDate() < $scope.stocks[i].date.getUTCDate() && //todo use moments for time < time
+                  ) {
+            $scope.stocks.splice(i,0,$scope.newStock);
+            inserted = true;
+            break;
+          }
+        }
+
+        if(!inserted) // push last
+          $scope.stocks.push($scope.newStock);
+
+        var address = $scope.serverRequest.stockAdd;
+        var req = {
+          method: 'POST',
+          url: address,
+          headers: {
+            'Content-Type': "application/x-www-form-urlencoded"
+          },
+          //should be "key=value" goes to body in request
+          data: $scope.prepareStockToRequest($scope.newStock)
+        };
+
+        $http(req).then(
+                function successCallback(response) {
+                  console.log(address + " success: " +response);
+                  console.log("add stock 1");
+                  $scope.getStock();
+                  console.log("add stock 2");
+                }, function errorCallback(response) {
+                  console.log(address+ " error: " + response);
+                  $scope.getStock();
+
+                }
+        );
+
+        console.log("add stock 3 " + $scope.newStock.symbol);
+        $scope.newStock=$scope.dummyStock;
+
+//        $scope.newStock.symbol="YAHO" + ++$scope.counter;
+
+      };
+
+      $scope.removeStock = function() {
+        var stock,
+            stockCopy;
+        var stockToRemove=[];
+        var stockToLeave=[];
+        var len = $scope.stocks.length;
+        for (var i=0; i < len; ++i) {
+          stock = $scope.stocks[i];
+          if (!stock.check) {
+            stockToLeave.push(stock);
+            continue;
+          }
+
+          stockCopy = jQuery.extend(true, {}, stock);
+          if (stockCopy.sellPrice === null)
+            stockCopy.sellPrice = $scope.emptySellPrice;
+
+          stockToRemove.push (stockCopy);
+        }
+
+        var stockToLeavePast=[];
+        var len = $scope.stocksPast.length;
+        for (var i=0; i < len; ++i) {
+          stock = $scope.stocksPast[i];
+          if (!stock.check) {
+            stockToLeavePast.push(stock);
+            continue;
+          }
+
+          stockCopy = jQuery.extend(true, {}, stock);
+          stockToRemove.push (stockCopy);
+        }
+
+        if(!stockToRemove.length) {
+          console.log("no stock is selected to remove");
+          window.alert("No stock is selected");
+          return false;
+        }
+
+        $scope.stocks = stockToLeave;
+        $scope.stocksPast = stockToLeavePast;
+
+        var dataJson = {
+          "user_id": $scope.userId,
+          stock: angular.toJson(stockToRemove)
+        };
+
+        var address = $scope.serverRequest.stockDelete;
+        var req = {
+          method: 'POST',
+          url: address,
+          headers: {
+            'Content-Type': "application/json"
+          },
+          //should be "key=value" goes to body in request
+          data: dataJson
+        };
+
+        $http(req).then(
+                function successCallback(response) {
+                  console.log(address + " success: " +response);
+                  $scope.getStock();//bringing the data from server
+                }, function errorCallback(response) {
+                  console.log(address+ " error: " + response);
+                  $scope.getStock();//bringing the data from server
+                }
+        );
+
+        $scope.restartSelectAll();
+      };
+
+      $scope.sellStock = function(stock) {
+        if (stock.symbol == null || stock.date == null || stock.amount == null || stock.buyPrice == null  || stock.sellPriceUpdate == null) {
+          console.log("sellStock: empty parameters");
+          window.alert("Empty parameters");
+          return false;
+        }
+
+        stock.date.setUTCHours(0,0,0,0);
+        stock.sellPrice = stock.sellPriceUpdate;
+        var address = $scope.serverRequest.stockSell;
+        var req = {
+          method: 'POST',
+          url: address,
+          headers: {
+            'Content-Type': "application/x-www-form-urlencoded"
+          },
+          //should be "key=value" goes to body in request
+          data: $scope.prepareStockToRequest(stock)
+        };
+
+        $http(req).then(
+                function successCallback(response) {
+                  console.log(address + " success: " +response);
+                  console.log("added stock: " + stock);
+                  $scope.getStock();
+                }, function errorCallback(response) {
+                  console.log(address+ " error: " + response);
+                  $scope.getStock();
+                }
+        );
+      };
+
+      $scope.selectAll = function (pastBool, boolVal) {
+        var arr = (pastBool) ? $scope.stocksPast : $scope.stocks;
+        arr.forEach(function (stock) {
+          stock.check=boolVal;
+        });
+      };
+
+      $scope.restartSelectAll = function () {
+        $scope.selectAllCheckBoxPast = $scope.selectAllCheckBox = false;
+        $scope.selectAll(true, false);
+        $scope.selectAll(false, false);
+      };
+
+      $scope.sortStock = function (val) {
+        if ($scope.sortTypeStock==val) {
+          $scope.sortReverseStock = !$scope.sortReverseStock;
+        } else {
+          $scope.sortTypeStock = val;
+          $scope.sortReverseStock = false;
+        }
+
+        var reverse = $scope.sortReverseStock;
+        var orderBy = $filter('orderBy');
+        if(_.isFunction($scope[$scope.sortTypeStock]))
+          $scope.stocks = orderBy($scope.stocks, $scope[$scope.sortTypeStock], reverse);
+        else
+          $scope.stocks = orderBy($scope.stocks, $scope.sortTypeStock, reverse);
+
+      };
+
+      $scope.sortStockPast = function (val) {
+        if ($scope.sortTypeStockPast==val) {
+          $scope.sortReverseStockPast = !$scope.sortReverseStockPast;
+        } else {
+          $scope.sortTypeStockPast = val;
+          $scope.sortReverseStockPast = false;
+        }
+
+        var reverse = $scope.sortReverseStockPast;
+        var orderBy = $filter('orderBy');
+        if(_.isFunction($scope[$scope.sortTypeStockPast]))
+          $scope.stocksPast = orderBy($scope.stocksPast, $scope[$scope.sortTypeStockPast], reverse);
+        else
+          $scope.stocksPast = orderBy($scope.stocksPast, $scope.sortTypeStockPast, reverse);;
+      };
+
+      $scope.reloadChartWidget= function (stackSymbol) {
+        chart.options.watchlist=stackSymbol;
+        if(stackSymbol.length)
+          chart.options.symbol=stackSymbol[0];
+        else
+          chart.options.symbol="FX:SPX500";
+
+        chart.reload();
+      };
+
+      (function init (){
+        var getUrl = window.location;
+        $scope.baseAddress=getUrl.origin;
+        if($scope.baseAddress.includes("localhost"))
+          $scope.baseAddress="http://127.0.0.1:8080";
+        console.log("base address: " + $scope.baseAddress);
+        $scope.serverRequest = {
+          login:  $scope.baseAddress+'/login',
+          stockGet:  $scope.baseAddress+'/stock/get',
+          stockAdd:  $scope.baseAddress+'/stock/add',
+          stockSell:  $scope.baseAddress+'/stock/sell',
+          stockDelete:  $scope.baseAddress+'/stock/delete'
+        };
+
+        $scope.userId=null;
+        $scope.user= {userNickName:"ido",password:"1"};
+        $scope.today = new Date();
+        $scope.today.setUTCHours(0,0,0,0);
+
+        console.log ("app.controller: " + $scope.today);
+
+        $scope.emptyStock={symbol:"",date:$scope.today,amount:0,buyPrice:0,check:false,sellPrice:null,sellPriceUpdate:null,
+          quote:{
+            LastTradePriceOnly:null,
+            LastTradeDate:null,
+            LastTradeTime:null,
+            DaysRange:null,
+            PercentChange:null,
+            Change:null,
+            Ask:null,
+            Bid:null
+          }};
+
+        $scope.sortTypeStock     = "stock.symbol"; // set the default sort type
+        $scope.sortForTotalPrice = function (stock) {stock.amount * stock.buyPrice;};
+        $scope.sortReverseStock  = false;  // set the default sort order
+        $scope.sortForProfitCurrentPercent = function (stock) {return stock.quote.LastTradePriceOnly/stock.buyPrice - 1;};
+        $scope.sortForTotalCurrentProfit = function (stock) {(stock.quote.LastTradePriceOnly - stock.buyPrice) * stock.amount; };
+        $scope.showColumnsStock={
+          "stock.symbol":"Symbol",
+          "stock.date":"Date","stock.amount":"Amount",
+          "stock.buyPrice":"Buy Price",
+          sortForTotalPrice:"Total Buy Price",
+          "stock.quote.LastTradePriceOnly":"Last Trade Price",
+          "stock.quote.LastTradeDate":"Last Trade Date",
+          "stock.quote.LastTradeTime":"Last Trade Time",
+          "stock.quote.DaysRange":"Day Range",
+          "stock.quote.PercentChange":"Daily Percent Change",
+          "stock.quote.Change":"Day Change",
+          "stock.quote.Ask":"Ask",
+          "stock.quote.Bid":"Bid",
+          sortForProfitCurrentPercent:"Profit Percent",
+          sortForTotalCurrentProfit:"Total Profit"};
+
+
+
+        $scope.sortTypeStockPast     = "stock.symbol"; // set the default sort type
+        $scope.sortReverseStockPast  = false;  // set the default sort order
+        $scope.sortForProfitPercent = function (stock) {return stock.sellPrice/stock.buyPrice - 1;};
+        $scope.sortForTotalProfit = function (stock) {(stock.sellPrice - stock.buyPrice) * stock.amount; };
+        $scope.showColumnsStockPast={
+          "stock.symbol":"Symbol",
+          "stock.date":"Date",
+          "stock.amount":"Amount",
+          "stock.buyPrice":"Buy Price",
+          sortForTotalPrice:"Total Buy Price",
+          "stock.sellPrice":"Sell Price",
+          sortForProfitPercent:"Profit Percent",
+          sortForTotalProfit:"Total Profit"};
+
+        $scope.emptySellPrice=-1;
+        $scope.dummyStock = jQuery.extend(true, {}, $scope.emptyStock);
+        $scope.dummyStock.symbol="";
+        $scope.dummyStock.date=$scope.today;
+        $scope.dummyStock.amount=null;
+        $scope.dummyStock.buyPrice=null;
+
+        $scope.counter = 1;
+        $scope.newStock= jQuery.extend(true, {}, $scope.dummyStock);
+
+        $scope.stocksNoQuote=[];
+        $scope.stocks = [];
+        $scope.stocksPast = [];
+
+        $scope.login();
+      })();
+
+    }])
+    .filter('percentage', ['$filter', function ($filter) {
+      return function (input, decimals) {
+        if (input==null)
+          return null;
+
+        var sign = (input > 0) ? '+' : '';
+        return sign + $filter('number')(input * 100, decimals) + '%';
+      };
+    }])
+    .filter('plustMinus', ['$filter', function ($filter) {
+      return function (input, decimals) {
+        if (input==null)
+          return null;
+
+        var sign = (input > 0) ? '+' : '';
+        return sign + input;
+      };
+    }])
+//    .directive("keepScroll", function(){
+//
+//      return {
+//
+//        controller : function($scope){
+//          var element = 0;
+//
+//          this.setElement = function(el){
+//            element = el;
+//          }
+//
+//          this.addItem = function(item){
+//            console.log("Adding item", item, item.clientHeight);
+//            element.scrollTop = (element.scrollTop+item.clientHeight+1); //1px for margin
+//          };
+//
+//        },
+//
+//        link : function(scope,el,attr, ctrl) {
+//
+//          ctrl.setElement(el[0]);
+//
+//        }
+//
+//      };
+//
+//    })
+
+    ; // app
+
+</script>

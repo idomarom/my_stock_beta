@@ -208,9 +208,11 @@
           <td>{{stock.quote.Ask}}</td>
           <td>{{stock.quote.Bid}}</td>
           <!-- Profit percent:-->
-          <td ng-class="{'profit':stock.quote.LastTradePriceOnly/stock.buyPrice > 1,'loss':stock.quote.LastTradePriceOnly/stock.buyPrice < 1}">{{stock.quote.LastTradePriceOnly ? (stock.quote.LastTradePriceOnly/stock.buyPrice - 1) : null | percentage:2}}</td>
+          <td ng-class="{'profit':stock.quote.LastTradePriceOnly/stock.buyPrice > 1,'loss':stock.quote.LastTradePriceOnly/stock.buyPrice < 1}">
+                        {{ (stock.quote.LastTradePriceOnly ? (stock.quote.LastTradePriceOnly/stock.buyPrice - 1) : null) | percentage:2}}</td>
           <!-- Total Profit:-->
-          <td ng-class="{'profit':stock.quote.LastTradePriceOnly-stock.buyPrice>0,'loss':stock.quote.LastTradePriceOnly-stock.buyPrice<0}">{{stock.quote.LastTradePriceOnly ? ((stock.quote.LastTradePriceOnly - stock.buyPrice) * stock.amount) : null | number:2 | plustMinus}}</td>
+          <td ng-class="{'profit':stock.quote.LastTradePriceOnly-stock.buyPrice>0,'loss':stock.quote.LastTradePriceOnly-stock.buyPrice<0}">
+                        {{ (stock.quote.LastTradePriceOnly ? ((stock.quote.LastTradePriceOnly - stock.buyPrice) * stock.amount) : null) | number:2 | plustMinus}}</td>
           <td><input type="submit" ng-click=sellStock(stock) value="Sell Stock" class="btn btn-md btn-primary"/> <input type="number" ng-model="stock.sellPriceUpdate" placeholder="Stock Sell Price"/></td>
         </tr>
         </tbody>
@@ -244,10 +246,13 @@
           <td>{{ stock.amount * stock.buyPrice }}</td>
           <td style="background-color: lightblue">{{ stock.sellPrice }}</td>
           <!-- Profit percent:-->
-          <td ng-class="{'profit':stock.sellPrice/stock.buyPrice > 1,'loss':stock.sellPrice/stock.buyPrice < 1}">{{stock.sellPrice/stock.buyPrice - 1 | percentage:2}}</td>
+          <td ng-class="{'profit':stock.sellPrice/stock.buyPrice > 1,'loss':stock.sellPrice/stock.buyPrice < 1}">
+                        {{ (stock.sellPrice/stock.buyPrice - 1) | percentage:2}}</td>
           <!-- Total Profit:-->
-          <td ng-class="{'profit':stock.sellPrice-stock.buyPrice>0,'loss':stock.sellPrice-stock.buyPrice<0}">{{(stock.sellPrice - stock.buyPrice) * stock.amount | number:2 | plustMinus}}</td>
-          <td><input type="submit" ng-click=sellStock(stock) value="Update Sell Price" class="btn btn-md btn-primary"> <input type="number" ng-model="stock.sellPriceUpdate" placeholder="Stock Sell Price"/></td>
+          <td ng-class="{'profit':stock.sellPrice-stock.buyPrice>0,'loss':stock.sellPrice-stock.buyPrice<0}">
+                        {{(stock.sellPrice - stock.buyPrice) * stock.amount | number:2 | plustMinus}}</td>
+          <td><input type="submit" ng-click=sellStock(stock) value="Update Sell Price" class="btn btn-md btn-primary">
+              <input type="number" ng-model="stock.sellPriceUpdate" placeholder="Stock Sell Price"/></td>
         </tr>
         </tbody>
 
@@ -690,10 +695,13 @@
       };
 
       (function init (){
+        var localHost = false;
         var getUrl = window.location;
         $scope.baseAddress=getUrl.origin;
-        if($scope.baseAddress.includes("localhost"))
-          $scope.baseAddress="http://127.0.0.1:8080";
+        if($scope.baseAddress.includes("localhost")) {
+          $scope.baseAddress = "http://127.0.0.1:8080";
+          localHost = true;
+        }
         console.log("base address: " + $scope.baseAddress);
         $scope.serverRequest = {
           login:  $scope.baseAddress+'/login',
@@ -773,7 +781,8 @@
         $scope.stocks = [];
         $scope.stocksPast = [];
 
-        $scope.login();
+        if (localHost)
+          $scope.login();
       })();
 
     }])
@@ -782,8 +791,10 @@
         if (input==null)
           return null;
 
-        var sign = (input > 0) ? '+' : '';
-        return sign + $filter('number')(input * 100, decimals) + '%';
+        var string = String(input);
+        var num = Number(string.replace(/\,/g, "")); // remove , from number representation
+        var sign = (num > 0) ? '+' : '';
+        return sign + $filter('number')(num * 100, decimals) + '%';
       };
     }])
     .filter('plustMinus', ['$filter', function ($filter) {
@@ -791,7 +802,9 @@
         if (input==null)
           return null;
 
-        var sign = (input > 0) ? '+' : '';
+        var string = String(input);
+        var num = Number(string.replace(/\,/g, "")); // remove , from number representation
+        var sign = (num > 0) ? '+' : '';
         return sign + input;
       };
     }])

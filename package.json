@@ -9,14 +9,14 @@
     "openshift"
   ],
   "author": {
-    "name": "OpenShift",
-    "email": "ramr@example.org",
-    "url": "http://www.openshift.com/"
+    "name": "Ido Marom",
+    "email": "",
+    "url": ""
   },
-  "homepage": "http://www.openshift.com/",
+  "homepage": "https://mystock-ido12.rhcloud.com/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/openshift/origin-server"
+    "url": "https://github.com/idomarom/my_stock_beta"
   },
 
   "engines": {
